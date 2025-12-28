@@ -1,67 +1,56 @@
 # Ubuntu bootstrap
 
-Skrypt do szybkiego przygotowania świeżego serwera Ubuntu:
+A script to quickly bootstrap a fresh Ubuntu server:
 - `apt update/upgrade`
-- ustawienie hostname + lokalne FQDN (primary + aliasy)
-- instalacja i uruchomienie Tailscale
-- utworzenie użytkownika (domyślnie `veloadmin`) + sudo
-- wgranie `authorized_keys` (z GitHub `.keys`, URL albo lokalnie)
-- konfiguracja UFW
-- hardening SSH (domyślnie port 10022, bez haseł, bez root)
+- set hostname + local FQDN (primary + aliases)
+- install and bring up Tailscale
+- create a user (default: `veloadmin`) + sudo
+- install `authorized_keys` (from GitHub `.keys`, a URL, or locally)
+- configure UFW
+- SSH hardening (default port 10022, no passwords, no root login)
 - `unattended-upgrades`
 
-## Wymagania
+## Requirements
 - Ubuntu
-- uruchomienie jako `root` lub z `sudo`
+- run as `root` or via `sudo`
 
-## Zmienne środowiskowe
+## Environment variables
 
-Wymagane:
-- `HOSTNAME_SHORT` – krótka nazwa hosta (np. `lwe-bael`)
+Required:
+- `HOSTNAME_SHORT` – short hostname (e.g. `lwe-bael`)
 - `TS_AUTHKEY` – Tailscale auth key (`tskey-auth-...`)
 
-Opcjonalne:
-- `PRIMARY_DOMAIN` – domena kanoniczna (domyślnie: `archax.eu`)
-- `EXTRA_DOMAINS` – dodatkowe domeny (comma-separated), np. `ts.archax.eu,example.net`
-- `NEW_USER` – nazwa użytkownika (domyślnie: `veloadmin`)
-- `SSH_PORT` – port SSH (domyślnie: `10022`)
-- `KEEP_SSH_PORT_22` – czy zostawić 22 otwarty w UFW jako „safety net” (`true/false`, domyślnie `true`)
+Optional:
+- `PRIMARY_DOMAIN` – canonical domain (default: `archax.eu`)
+- `EXTRA_DOMAINS` – additional domains (comma-separated), e.g. `ts.archax.eu,example.net`
+- `NEW_USER` – username to create (default: `veloadmin`)
+- `SSH_PORT` – SSH port (default: `10022`)
+- `KEEP_SSH_PORT_22` – keep port 22 open in UFW as a safety net (`true/false`, default: `true`)
 
-Źródło kluczy SSH (jedno z poniższych):
-- `GITHUB_KEYS_USER` – pobiera klucze z `https://github.com/<user>.keys`
-- `AUTHORIZED_KEYS_URL` – pobiera plik `authorized_keys` z podanego URL (np. raw z GitHub)
-- jeśli oba puste, skrypt próbuje skopiować lokalne `~/.ssh/authorized_keys` z użytkownika uruchamiającego `sudo` lub z `/root`
+SSH key source (choose one of the following):
+- `GITHUB_KEYS_USER` – downloads keys from `https://github.com/<user>.keys`
+- `AUTHORIZED_KEYS_URL` – downloads an `authorized_keys` file from the given URL (e.g. GitHub raw)
+- if both are empty, the script tries to copy local `~/.ssh/authorized_keys` from the user running `sudo` or from `/root`
 
-## Uruchomienie (zalecane – z pliku .env)
+## Run (recommended – using a .env file)
 
-Utwórz plik `.env` (NIE commituj go do repo):
+Create a `.env` file:
 
 ```bash
 cat > .env <<'EOF'
-HOSTNAME_SHORT="lwe-bael"
-PRIMARY_DOMAIN="shase.eu"
-EXTRA_DOMAINS="ts.archax.eu"
+HOSTNAME_SHORT="xxx-hostname"
+PRIMARY_DOMAIN="mainmomain.eu"
+EXTRA_DOMAINS="ts.seconddomain.eu"
 TS_AUTHKEY="tskey-auth-REDACTED"
 
-# opcjonalnie:
+# optional:
 # NEW_USER="veloadmin"
 # SSH_PORT="10022"
 # KEEP_SSH_PORT_22="true"
 
-# klucze SSH (wybierz jedno):
+# SSH keys (pick one):
 GITHUB_KEYS_USER="senecjusz"
 # AUTHORIZED_KEYS_URL="https://raw.githubusercontent.com/<org>/<repo>/<ref>/authorized_keys"
 EOF
 
 chmod 600 .env
-
-
-## Quick start
-
-```bash
-sudo HOSTNAME_SHORT="xxx-host" \
-  PRIMARY_DOMAIN="domian.eu" \
-  EXTRA_DOMAINS="ts.domain.eu" \
-  TS_AUTHKEY="tskey-auth-REDACTED" \
-  GITHUB_KEYS_USER="senecjusz" \
-  ./bootstrap.sh
